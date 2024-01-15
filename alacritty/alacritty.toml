@@ -1,0 +1,8 @@
+[window]
+opacity = 1
+decorations = "full"
+
+[env]
+XTERM = "xterm-256color"
+
+

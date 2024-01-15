@@ -1,0 +1,22 @@
+env:
+  XTERM: xterm-256color   # pour avoir un terminal correct sur SSH
+
+font:
+  size: 07.5              # la taille de la police
+
+colors:
+  primary:
+    background: '#000000'
+    foreground: '#e0e0e0'
+
+  normal:
+    black:   '#3f3f3f'
+    red:     '#b06060'
+    green:   '#60b47a'
+    yellow:  '#dfaf8f'
+    blue:    '#506080'
+    magenta: '#dc9cc3'
+    cyan:    '#8cd0d8'
+    white:   '#ffffff'
+
+window.opacity: 0.8   # opacité du fond

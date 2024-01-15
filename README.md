@@ -6,7 +6,7 @@
 
 ## Lock screen menu
 
-![alt text](lockscreen.png/rofi.png)
+![alt text](images/lockscreen.png)
 
 ## Term
 

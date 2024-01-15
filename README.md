@@ -6,7 +6,7 @@
 
 ## Lock screen menu
 
-![alt text](images/lockscreen.png)
+![alt text](images/lockscreen.jpg)
 
 ## Term
 

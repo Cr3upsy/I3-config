@@ -12,3 +12,8 @@
 
 ![alt text](images/neofetch.png)
 
+## Bar
+
+![alt text](images/bar.png)
+
+

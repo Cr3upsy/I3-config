@@ -58,14 +58,27 @@ RANDOM_IMAGE=$(find "$IMAGE_FOLDER" -type f -name "*.png" | shuf -n 1)
 # Set the name of the primary screen
 primary_screen="eDP"
 
-# Set the name of the primary screen
-primary_screen="eDP"
-
 # Declare an associative array to store screen positions
 declare -A screen_positions
 
-# Save the current positions of the screens
+# Declare an associative array to store workspaces
+declare -A workspace_assignments
+
+
+# Save the current positions of the screens and workspaces
 connected_screens=$(xrandr | grep " connected" | awk '{ print $1 }')
+
+# Run i3-msg command and store the output in a variable
+i3_msg_output=$(i3-msg -t get_workspaces)
+
+# Check if jq is available
+if command -v jq > /dev/null; then
+    # Parse the JSON output and extract 'num' and 'output' values to store workspace location on monitors
+    mapfile -t workspace_array < <(echo "$i3_msg_output" | jq -c '.[] | {num: .num, output: .output}')
+else
+    echo "jq is not installed. Please install jq to run this script."
+fi
+
 
 for screen in $connected_screens; do
     if [ "$screen" != "$primary_screen" ]; then
@@ -73,11 +86,33 @@ for screen in $connected_screens; do
         position=$(xrandr --query | awk -v screen="$screen" '/\ connected/ && $1 == screen {print $3}' | awk -F'[+x]' '{print $(NF-1)"x"$NF}')
         screen_positions["$screen"]=$position
         xrandr --output $screen --off
+
+    elif [ "$screen" == "$primary_screen" ]; then
+        position=$(xrandr --query | awk -v screen="$screen" '/\ connected/ && $1 == screen {print  $4}' | awk -F'[+x]' '{print $(NF-1)"x"$NF}')
+        screen_positions["$screen"]=$position
+
     fi
+
 done
 
+# Create an array to store the keys and values
+temp_array=()
+for key in "${!screen_positions[@]}"; do
+    temp_array+=("$key ${screen_positions[$key]}")
+done
 
-# suspend message display
+# Sort the array by the second column (values)
+IFS=$'\n' sorted_array=($(sort -k2n <<<"${temp_array[*]}"))
+unset IFS
+
+# Create an array to store the sorted keys
+ordered_screens=()
+for element in "${sorted_array[@]}"; do
+    key=${element%% *}
+    ordered_screens+=("$key")
+done
+
+# Suspend message display
 pkill -u "$USER" -USR1 dunst
 i3-msg bar mode invisible
 
@@ -110,14 +145,25 @@ i3lock -n \
 
 wait
 
-# resume message display
+# Resume message display
 pkill -u "$USER" -USR2 dunst
 i3-msg bar mode dock
 
-# Restore the screen positions from the variables
-for screen in "${!screen_positions[@]}"; do
+# Restore the screen positions ordered by position
+for screen in "${ordered_screens[@]}"; do
     position=${screen_positions["$screen"]}
-    echo $position
+    workspace=${workspace_assignments["$screen"]}
+    echo "Setting position for $screen to $position"
     xrandr --output $screen --auto --pos $position
     feh --randomize --bg-scale ~/Documents/Background/i3_home
+done
+
+
+# Loop through the array and print key-value pairs
+for workspace in "${workspace_array[@]}"; do
+    num=$(jq -r '.num' <<< "$workspace")
+    output=$(jq -r '.output' <<< "$workspace")
+    echo "Restoring workspace $num, to output: $output"
+    i3-msg "[workspace=$num]" move workspace to output $output
+
 done
